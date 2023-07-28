@@ -9,11 +9,11 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/chandrajeetn/lambda-flag-go-server/internal/evaluation"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation"
 
-	"github.com/chandrajeetn/lambda-flag-go-server/pkg/experiment"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
 
-	"github.com/chandrajeetn/lambda-flag-go-server/internal/logger"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/internal/logger"
 )
 
 var clients = map[string]*Client{}

@@ -2,12 +2,12 @@ package localEvaluation
 
 import (
 	"fmt"
-	_ "github.com/chandrajeetn/lambda-flag-go-server/internal/evaluation/lib/linuxArm64"
-	_ "github.com/chandrajeetn/lambda-flag-go-server/internal/evaluation/lib/linuxX64"
-	_ "github.com/chandrajeetn/lambda-flag-go-server/internal/evaluation/lib/macosArm64"
-	_ "github.com/chandrajeetn/lambda-flag-go-server/internal/evaluation/lib/macosX64"
-	"github.com/chandrajeetn/lambda-flag-go-server/pkg/experiment"
-	"github.com/chandrajeetn/lambda-flag-go-server/pkg/experiment/local"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/linuxArm64"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/linuxX64"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/macosArm64"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/macosX64"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment/local"
 	"github.com/joho/godotenv"
 	"os"
 	"strconv"
