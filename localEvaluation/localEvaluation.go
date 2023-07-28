@@ -2,9 +2,12 @@ package localEvaluation
 
 import (
 	"fmt"
-	"github.com/LambdaTest/lambda-featureflag-go-sdk/logger"
-	"github.com/amplitude/experiment-go-server/pkg/experiment"
-	"github.com/amplitude/experiment-go-server/pkg/experiment/local"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/linuxArm64"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/linuxX64"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/macosArm64"
+	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/macosX64"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment/local"
 	"github.com/joho/godotenv"
 	"os"
 	"strconv"
@@ -13,7 +16,6 @@ import (
 
 var (
 	client                                    *local.Client
-	Logger                                    = logger.GetLogger()
 	LocalEvaluationConfigDebug                = false
 	LocalEvaluationConfigServerUrl            = "https://api.lab.amplitude.com/"
 	LocalEvaluationConfigPollInterval         = 30
@@ -41,9 +43,9 @@ type UserProperties struct {
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		Logger.Infof("No .env file found")
+		fmt.Printf("No .env file found")
 	} else {
-		Logger.Infof(".env file loaded")
+		fmt.Printf(".env file loaded")
 	}
 
 	if os.Getenv("LOCAL_EVALUATION_CONFIG_DEBUG") != "" {
@@ -70,7 +72,6 @@ func Initialize() error {
 		FlagConfigPollerInterval:       time.Duration(LocalEvaluationConfigPollInterval) * time.Second,
 		FlagConfigPollerRequestTimeout: time.Duration(LocalEvaluationConfigPollerRequestTimeout) * time.Second,
 	}
-	Logger.Debugf("config payload: %v, deployment key:%s", config, LocalEvaluationDeploymentKey)
 	client = local.Initialize(LocalEvaluationDeploymentKey, &config)
 	err := client.Start()
 	if err != nil {
@@ -98,11 +99,8 @@ func fetch(flagName string, user UserProperties) variant {
 		UserProperties: userProp,
 	}
 
-	Logger.Debugf("user payload: %v, flag: %s", expUser, flagName)
-
 	variants, err := client.Evaluate(&expUser, flagKeys)
 	if err != nil {
-		Logger.Errorf("error in evaluating flag: %s error: %s", flagName, err.Error())
 		return variant{}
 	}
 

@@ -3,7 +3,6 @@ module github.com/LambdaTest/lambda-featureflag-go-sdk
 go 1.20
 
 require (
-	github.com/amplitude/experiment-go-server v1.1.2
 	github.com/joho/godotenv v1.5.1
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
