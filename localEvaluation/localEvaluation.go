@@ -16,9 +16,9 @@ import (
 
 var (
 	client                                    *local.Client
-	LocalEvaluationConfigDebug                = false
-	LocalEvaluationConfigServerUrl            = "https://api.lab.amplitude.com/"
-	LocalEvaluationConfigPollInterval         = 30
+	LocalEvaluationConfigDebug                = true
+	LocalEvaluationConfigServerUrl            = "https://api.lambdatest.com"
+	LocalEvaluationConfigPollInterval         = 120
 	LocalEvaluationConfigPollerRequestTimeout = 10
 	LocalEvaluationDeploymentKey              = ""
 )
@@ -29,18 +29,20 @@ type variant struct {
 }
 
 type UserProperties struct {
-	OrgId              string `json:"org_id,omitempty"`
-	OrgName            string `json:"org_name,omitempty"`
-	OrgStatus          string `json:"org_status,omitempty"`
-	Username           string `json:"username,omitempty"`
-	Email              string `json:"email,omitempty"`
-	Plan               string `json:"plan,omitempty"`
-	SubscriptionType   string `json:"subscription_type,omitempty"`
-	SubscriptionStatus string `json:"subscription_status,omitempty"`
-	HubRegion          string `json:"hub_region,omitempty"`
+	OrgId            string `json:"org_id,omitempty"`
+	OrgName          string `json:"org_name,omitempty"`
+	Username         string `json:"username,omitempty"`
+	UserStatus       string `json:"user_status,omitempty"`
+	Email            string `json:"email,omitempty"`
+	Plan             string `json:"plan,omitempty"`
+	SubscriptionType string `json:"subscription_type,omitempty"`
+	HubRegion        string `json:"hub_region,omitempty"`
+	InfraProvider    string `json:"infra_provider,omitempty"`
+	TemplateId       string `json:"template_id,omitempty"`
 }
 
 func init() {
+
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("No .env file found")
@@ -65,7 +67,7 @@ func init() {
 	}
 }
 
-func Initialize() error {
+func Initialize() {
 	config := local.Config{
 		Debug:                          LocalEvaluationConfigDebug,
 		ServerUrl:                      LocalEvaluationConfigServerUrl,
@@ -76,23 +78,22 @@ func Initialize() error {
 	err := client.Start()
 	if err != nil {
 		err = fmt.Errorf("unable to create local evaluation client with given config %v with error %s", config, err.Error())
-		return err
+		panic(err)
 	}
-	return nil
 }
 
 func fetch(flagName string, user UserProperties) variant {
 	flagKeys := []string{flagName}
 	userProp := map[string]interface{}{
-		"org_id":              user.OrgId,
-		"org_name":            user.OrgName,
-		"org_status":          user.OrgStatus,
-		"username":            user.Username,
-		"email":               user.Email,
-		"plan":                user.Plan,
-		"subscription_type":   user.SubscriptionType,
-		"subscription_status": user.SubscriptionStatus,
-		"hub_region":          user.HubRegion,
+		"org_id":            user.OrgId,
+		"org_name":          user.OrgName,
+		"username":          user.Username,
+		"email":             user.Email,
+		"plan":              user.Plan,
+		"subscription_type": user.SubscriptionType,
+		"hub_region":        user.HubRegion,
+		"infra_provider":    user.InfraProvider,
+		"template_id":       user.TemplateId,
 	}
 
 	expUser := experiment.User{
