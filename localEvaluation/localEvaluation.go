@@ -20,7 +20,7 @@ var (
 	LocalEvaluationConfigServerUrl            = "https://api.lambdatest.com"
 	LocalEvaluationConfigPollInterval         = 120
 	LocalEvaluationConfigPollerRequestTimeout = 10
-	LocalEvaluationDeploymentKey              = "server-prdcpdFqASTGAUZ7rifW4B9nPKtkhmpx"
+	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
 )
 
 type variant struct {
