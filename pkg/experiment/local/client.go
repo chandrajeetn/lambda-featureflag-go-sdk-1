@@ -153,14 +153,10 @@ func (c *Client) Flags() (*string, error) {
 }
 
 func (c *Client) doFlags() (*string, error) {
-	endpoint, err := url.Parse(c.config.ServerUrl)
-	if err != nil {
-		return nil, err
-	}
-	endpoint.Path = "sdk/v1/flags"
+	path := "/sdk/v1/flags"
 	ctx, cancel := context.WithTimeout(context.Background(), c.config.FlagConfigPollerRequestTimeout)
 	defer cancel()
-	req, err := http.NewRequest("GET", endpoint.String(), nil)
+	req, err := http.NewRequest("GET", c.config.ServerUrl+path, nil)
 	if err != nil {
 		return nil, err
 	}
