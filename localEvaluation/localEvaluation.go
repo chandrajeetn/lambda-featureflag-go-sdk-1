@@ -30,6 +30,7 @@ type variant struct {
 
 type UserProperties struct {
 	OrgId            string `json:"org_id,omitempty"`
+	UserId           string `json:"user_id,omitempty"`
 	OrgName          string `json:"org_name,omitempty"`
 	Username         string `json:"username,omitempty"`
 	UserStatus       string `json:"user_status,omitempty"`
@@ -97,6 +98,7 @@ func fetch(flagName string, user UserProperties) variant {
 	}
 
 	expUser := experiment.User{
+		UserId:         user.UserId,
 		UserProperties: userProp,
 	}
 

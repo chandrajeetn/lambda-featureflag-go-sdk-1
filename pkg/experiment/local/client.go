@@ -1,15 +1,17 @@
 package local
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"sync"
-
-	"github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation"
 
 	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
 
@@ -19,6 +21,8 @@ import (
 var clients = map[string]*Client{}
 var initMutex = sync.Mutex{}
 
+const EXPOSURE_EVENT_TYPE = "$exposure"
+
 type Client struct {
 	log    *logger.Log
 	apiKey string
@@ -26,6 +30,20 @@ type Client struct {
 	client *http.Client
 	poller *poller
 	flags  *string
+}
+
+type Event struct {
+	EventType       string `json:"event_type"`
+	UserId          string `json:"user_id"`
+	EventProperties struct {
+		FlagKey string      `json:"flag_key"`
+		Variant interface{} `json:"variant"`
+	} `json:"event_properties"`
+}
+
+type ExposurePayload struct {
+	ApiKey string  `json:"api_key"`
+	Events []Event `json:"events"`
 }
 
 func Initialize(apiKey string, config *Config) *Client {
@@ -82,6 +100,7 @@ func (c *Client) Evaluate(user *experiment.User, flagKeys []string) (map[string]
 
 	resultJson := evaluation.Evaluate(*c.flags, string(userJson))
 	c.log.Debug("evaluate result: %v\n", resultJson)
+	go c.exposure(resultJson, user.UserId)
 	var interopResult *interopResult
 	err = json.Unmarshal([]byte(resultJson), &interopResult)
 	if err != nil {
@@ -185,4 +204,65 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+
+func (c *Client) exposure(resultJson string, userId string) {
+	parsePayload := map[string]interface{}{}
+	err := json.Unmarshal([]byte(resultJson), &parsePayload)
+	if err != nil {
+		c.log.Error("unable to parse string %s with error %s", resultJson, err.Error())
+		return
+	}
+	payload := ExposurePayload{}
+	payload.ApiKey = os.Getenv("ANALYTICS_API_KEY")
+	if result, ok := parsePayload["result"].(map[string]interface{}); ok {
+		for flagKey, flagValue := range result {
+			event := Event{}
+			event.EventType = EXPOSURE_EVENT_TYPE
+			event.UserId = userId
+			event.EventProperties.FlagKey = flagKey
+			if flagResult, ok := flagValue.(map[string]interface{}); ok {
+				if variant, ok := flagResult["variant"].(map[string]interface{}); ok {
+					event.EventProperties.Variant = variant
+				}
+			}
+			payload.Events = append(payload.Events, event)
+		}
+	}
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		c.log.Error("unable to marsal payload %+v with error %s", payload, err.Error())
+		return
+	}
+	c.log.Debug("exposure payload : %s", string(payloadBytes))
+
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.FlagConfigPollerRequestTimeout)
+	defer cancel()
+	req, err := http.NewRequest(http.MethodPost, "https://api2.amplitude.com/2/httpapi", bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		c.log.Error("unable to create request with error %s", err.Error())
+		return
+	}
+	req = req.WithContext(ctx)
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	var client = &http.Client{
+		Timeout: c.config.FlagConfigPollerRequestTimeout,
+		Transport: &http.Transport{
+			MaxIdleConns:        5,
+			MaxIdleConnsPerHost: 5,
+			DisableKeepAlives:   true,
+		},
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.log.Error("error %s in making call to amplitude server", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.log.Error("error %s while reading response", err.Error())
+		return
+	}
+	c.log.Debug("exposure response: %s", string(body))
 }
