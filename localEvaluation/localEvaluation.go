@@ -83,7 +83,7 @@ func Initialize() {
 	}
 }
 
-func fetch(flagName string, user UserProperties) variant {
+func fetch(flagName string, user UserProperties) map[string]experiment.Variant {
 	flagKeys := []string{flagName}
 	userProp := map[string]interface{}{
 		"org_id":            user.OrgId,
@@ -104,20 +104,19 @@ func fetch(flagName string, user UserProperties) variant {
 
 	variants, err := client.Evaluate(&expUser, flagKeys)
 	if err != nil {
-		return variant{}
+		return map[string]experiment.Variant{}
 	}
-
-	return variant(variants[flagName])
+	return variants
 }
 
 func GetFeatureFlagString(flagName string, user UserProperties) string {
 	data := fetch(flagName, user)
-	return data.Value
+	return data[flagName].Value
 }
 
 func GetFeatureFlagBool(flagName string, user UserProperties) bool {
 	data := fetch(flagName, user)
-	if val, err := strconv.ParseBool(data.Value); err == nil {
+	if val, err := strconv.ParseBool(data[flagName].Value); err == nil {
 		return val
 	}
 	return false
@@ -126,7 +125,7 @@ func GetFeatureFlagBool(flagName string, user UserProperties) bool {
 func GetFeatureFlagPayload(flagName string, user UserProperties) map[string]interface{} {
 	data := fetch(flagName, user)
 	mapData := make(map[string]interface{})
-	mapData["value"] = data.Value
-	mapData["payload"] = data.Payload
+	mapData["value"] = data[flagName].Value
+	mapData["payload"] = data[flagName].Payload
 	return mapData
 }
