@@ -37,7 +37,7 @@ type UserProperties struct {
 	TemplateId       string `json:"template_id,omitempty"`
 }
 
-type Config struct {
+type AmplitudeConfig struct {
 	Debug                          bool
 	ServerUrl                      string
 	FlagConfigPollerInterval       time.Duration
@@ -89,7 +89,7 @@ func Initialize() {
 	}
 }
 
-func InitializeWithConfig(conf Config) {
+func InitializeWithConfig(conf AmplitudeConfig) {
 	client = local.Initialize(LocalEvaluationDeploymentKey, (*local.Config)(&conf))
 	err := client.Start()
 	if err != nil {
