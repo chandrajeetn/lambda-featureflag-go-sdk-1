@@ -23,13 +23,9 @@ var (
 	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
 )
 
-type variant struct {
-	Value   string      `json:"value,omitempty"`
-	Payload interface{} `json:"payload,omitempty"`
-}
-
 type UserProperties struct {
 	OrgId            string `json:"org_id,omitempty"`
+	UserId           string `json:"user_id,omitempty"`
 	OrgName          string `json:"org_name,omitempty"`
 	Username         string `json:"username,omitempty"`
 	UserStatus       string `json:"user_status,omitempty"`
@@ -41,8 +37,19 @@ type UserProperties struct {
 	TemplateId       string `json:"template_id,omitempty"`
 }
 
-func init() {
+type Config struct {
+	Debug                          bool
+	ServerUrl                      string
+	FlagConfigPollerInterval       time.Duration
+	FlagConfigPollerRequestTimeout time.Duration
+}
 
+type AmplitudeVariant struct {
+	Value   string      `json:"value,omitempty"`
+	Payload interface{} `json:"payload,omitempty"`
+}
+
+func init() {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Printf("No .env file found")
@@ -77,13 +84,31 @@ func Initialize() {
 	client = local.Initialize(LocalEvaluationDeploymentKey, &config)
 	err := client.Start()
 	if err != nil {
-		err = fmt.Errorf("unable to create local evaluation client with given config %v with error %s", config, err.Error())
+		err = fmt.Errorf("unable to create local evaluation client with given config %+v with error %s", config, err.Error())
 		panic(err)
 	}
 }
 
-func fetch(flagName string, user UserProperties) variant {
-	flagKeys := []string{flagName}
+func InitializeWithConfig(conf Config) {
+	client = local.Initialize(LocalEvaluationDeploymentKey, (*local.Config)(&conf))
+	err := client.Start()
+	if err != nil {
+		err = fmt.Errorf("unable to create local evaluation client with given config %+v with error %s", conf, err.Error())
+		panic(err)
+	}
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
+func fetch(flagKeys []string, user UserProperties) map[string]AmplitudeVariant {
+	variants := make(map[string]AmplitudeVariant)
 	userProp := map[string]interface{}{
 		"org_id":            user.OrgId,
 		"org_name":          user.OrgName,
@@ -95,36 +120,64 @@ func fetch(flagName string, user UserProperties) variant {
 		"infra_provider":    user.InfraProvider,
 		"template_id":       user.TemplateId,
 	}
-
 	expUser := experiment.User{
+		UserId:         user.UserId,
 		UserProperties: userProp,
 	}
 
-	variants, err := client.Evaluate(&expUser, flagKeys)
+	result, err := client.EvaluateByOrg(&expUser)
 	if err != nil {
-		return variant{}
+		return variants
+	}
+	filter := len(flagKeys) != 0
+	for k, v := range *result {
+		if v.IsDefaultVariant {
+			continue
+		}
+		if !filter {
+			variants[k] = AmplitudeVariant{
+				Value:   v.Variant.Key,
+				Payload: v.Variant.Payload,
+			}
+			continue
+		}
+		if !contains(flagKeys, k) {
+			variants[k] = AmplitudeVariant{
+				Value:   v.Variant.Key,
+				Payload: v.Variant.Payload,
+			}
+		}
 	}
 
-	return variant(variants[flagName])
+	return variants
 }
 
 func GetFeatureFlagString(flagName string, user UserProperties) string {
-	data := fetch(flagName, user)
-	return data.Value
+	flagKeys := []string{flagName}
+	data := fetch(flagKeys, user)
+	return data[flagName].Value
 }
 
 func GetFeatureFlagBool(flagName string, user UserProperties) bool {
-	data := fetch(flagName, user)
-	if val, err := strconv.ParseBool(data.Value); err == nil {
+	flagKeys := []string{flagName}
+	data := fetch(flagKeys, user)
+	if val, err := strconv.ParseBool(data[flagName].Value); err == nil {
 		return val
 	}
 	return false
 }
 
 func GetFeatureFlagPayload(flagName string, user UserProperties) map[string]interface{} {
-	data := fetch(flagName, user)
+	flagKeys := []string{flagName}
+	data := fetch(flagKeys, user)
 	mapData := make(map[string]interface{})
-	mapData["value"] = data.Value
-	mapData["payload"] = data.Payload
+	mapData["value"] = data[flagName].Value
+	mapData["payload"] = data[flagName].Payload
 	return mapData
+}
+
+func GetFeatureFlagByOrg(user UserProperties) map[string]AmplitudeVariant {
+	flagKeys := []string{}
+	data := fetch(flagKeys, user)
+	return data
 }
