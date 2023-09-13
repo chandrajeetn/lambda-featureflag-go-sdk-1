@@ -141,7 +141,7 @@ func fetch(flagKeys []string, user UserProperties) map[string]AmplitudeVariant {
 			}
 			continue
 		}
-		if !contains(flagKeys, k) {
+		if contains(flagKeys, k) {
 			variants[k] = AmplitudeVariant{
 				Value:   v.Variant.Key,
 				Payload: v.Variant.Payload,
