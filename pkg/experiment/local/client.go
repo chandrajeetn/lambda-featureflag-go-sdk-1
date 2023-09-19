@@ -66,12 +66,10 @@ func (c *Client) Start() error {
 	return nil
 }
 
-func (c *Client) Evaluate(user *experiment.User, flagKeys []string) (map[string]experiment.Variant, error) {
-	variants := make(map[string]experiment.Variant)
+func (c *Client) EvaluateByOrg(user *experiment.User) (*EvaluationResult, error) {
 	if len(*c.flags) == 0 {
 		c.log.Debug("evaluate: no flags")
-		return variants, nil
-
+		return nil, nil
 	}
 	userJson, err := json.Marshal(user)
 	if err != nil {
@@ -90,18 +88,7 @@ func (c *Client) Evaluate(user *experiment.User, flagKeys []string) (map[string]
 	if interopResult.Error != nil {
 		return nil, fmt.Errorf("evaluation resulted in error: %v", *interopResult.Error)
 	}
-	result := interopResult.Result
-	filter := len(flagKeys) != 0
-	for k, v := range *result {
-		if v.IsDefaultVariant || (filter && !contains(flagKeys, k)) {
-			continue
-		}
-		variants[k] = experiment.Variant{
-			Value:   v.Variant.Key,
-			Payload: v.Variant.Payload,
-		}
-	}
-	return variants, nil
+	return interopResult.Result, nil
 }
 
 func (c *Client) Rules() (map[string]interface{}, error) {
@@ -176,13 +163,4 @@ func (c *Client) doFlags() (*string, error) {
 	flags := string(body)
 	c.log.Debug("flags: %v", flags)
 	return &flags, nil
-}
-
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
 }

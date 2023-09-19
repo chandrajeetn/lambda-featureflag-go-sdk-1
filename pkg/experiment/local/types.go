@@ -11,9 +11,9 @@ type flagResult struct {
 	IsDefaultVariant bool              `json:"isDefaultVariant,omitempty"`
 }
 
-type evaluationResult = map[string]flagResult
+type EvaluationResult = map[string]flagResult
 
 type interopResult struct {
-	Result *evaluationResult `json:"result,omitempty"`
+	Result *EvaluationResult `json:"result,omitempty"`
 	Error  *string           `json:"error,omitempty"`
 }
