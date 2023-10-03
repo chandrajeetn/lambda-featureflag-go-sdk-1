@@ -162,14 +162,19 @@ func fetch(flagKeys []string, user UserProperties, valueOnly bool) map[string]in
 func GetFeatureFlagString(flagName string, user UserProperties) string {
 	flagKeys := []string{flagName}
 	data := fetch(flagKeys, user, false)
-	return data[flagName].(AmplitudeVariant).Value
+	if flagData, ok := data[flagName].(AmplitudeVariant); ok {
+		return flagData.Value
+	}
+	return ""
 }
 
 func GetFeatureFlagBool(flagName string, user UserProperties) bool {
 	flagKeys := []string{flagName}
 	data := fetch(flagKeys, user, false)
-	if val, err := strconv.ParseBool(data[flagName].(AmplitudeVariant).Value); err == nil {
-		return val
+	if flagData, ok := data[flagName].(AmplitudeVariant); ok {
+		if val, err := strconv.ParseBool(flagData.Value); err == nil {
+			return val
+		}
 	}
 	return false
 }
@@ -178,8 +183,10 @@ func GetFeatureFlagPayload(flagName string, user UserProperties) map[string]inte
 	flagKeys := []string{flagName}
 	data := fetch(flagKeys, user, false)
 	mapData := make(map[string]interface{})
-	mapData["value"] = data[flagName].(AmplitudeVariant).Value
-	mapData["payload"] = data[flagName].(AmplitudeVariant).Payload
+	if flagData, ok := data[flagName].(AmplitudeVariant); ok {
+		mapData["value"] = flagData.Value
+		mapData["payload"] = flagData.Payload
+	}
 	return mapData
 }
 
