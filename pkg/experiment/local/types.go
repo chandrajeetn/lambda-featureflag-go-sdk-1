@@ -1,17 +1,17 @@
 package local
 
-type evaluationVariant struct {
+type EvaluationVariant struct {
 	Key     string      `json:"key,omitempty"`
 	Payload interface{} `json:"payload,omitempty"`
 }
 
-type flagResult struct {
-	Variant          evaluationVariant `json:"variant,omitempty"`
+type FlagResult struct {
+	Variant          EvaluationVariant `json:"variant,omitempty"`
 	Description      string            `json:"description,omitempty"`
 	IsDefaultVariant bool              `json:"isDefaultVariant,omitempty"`
 }
 
-type EvaluationResult = map[string]flagResult
+type EvaluationResult = map[string]FlagResult
 
 type interopResult struct {
 	Result *EvaluationResult `json:"result,omitempty"`
