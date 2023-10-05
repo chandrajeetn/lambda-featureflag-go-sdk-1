@@ -5,13 +5,13 @@ type EvaluationVariant struct {
 	Payload interface{} `json:"payload,omitempty"`
 }
 
-type FlagResult struct {
+type flagResult struct {
 	Variant          EvaluationVariant `json:"variant,omitempty"`
 	Description      string            `json:"description,omitempty"`
 	IsDefaultVariant bool              `json:"isDefaultVariant,omitempty"`
 }
 
-type EvaluationResult = map[string]FlagResult
+type EvaluationResult = map[string]flagResult
 
 type interopResult struct {
 	Result *EvaluationResult `json:"result,omitempty"`
