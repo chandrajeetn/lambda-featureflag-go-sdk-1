@@ -119,7 +119,7 @@ func fetch(user UserProperties) (*local.EvaluationResult, error) {
 
 func getValue(flagName string, user UserProperties) local.EvaluationVariant {
 	result, _ := fetch(user)
-	if *result != nil {
+	if result != nil && *result != nil {
 		if value, ok := (*result)[flagName]; ok {
 			return value.Variant
 		}
@@ -130,7 +130,7 @@ func getValue(flagName string, user UserProperties) local.EvaluationVariant {
 func getMapOfValue(user UserProperties) map[string]interface{} {
 	flags := make(map[string]interface{})
 	result, _ := fetch(user)
-	if *result != nil {
+	if result != nil && *result != nil {
 		for k, v := range *result {
 			if v.IsDefaultVariant {
 				continue
