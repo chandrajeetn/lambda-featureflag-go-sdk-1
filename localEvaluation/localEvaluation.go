@@ -44,11 +44,6 @@ type AmplitudeConfig struct {
 	FlagConfigPollerRequestTimeout time.Duration
 }
 
-type AmplitudeVariant struct {
-	Value   string      `json:"value,omitempty"`
-	Payload interface{} `json:"payload,omitempty"`
-}
-
 func init() {
 	err := godotenv.Load()
 	if err != nil {
@@ -98,17 +93,7 @@ func InitializeWithConfig(conf AmplitudeConfig, deploymentKey string) {
 	}
 }
 
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
-
-func fetch(flagKeys []string, user UserProperties, valueOnly bool) map[string]interface{} {
-	variants := make(map[string]interface{})
+func fetch(user UserProperties) (*local.EvaluationResult, error) {
 	userProp := map[string]interface{}{
 		"org_id":            user.OrgId,
 		"org_name":          user.OrgName,
@@ -127,71 +112,57 @@ func fetch(flagKeys []string, user UserProperties, valueOnly bool) map[string]in
 
 	result, err := client.EvaluateByOrg(&expUser)
 	if err != nil {
-		return variants
+		return nil, err
 	}
-	filter := len(flagKeys) != 0
-	for k, v := range *result {
-		if v.IsDefaultVariant {
-			continue
-		}
-		if !filter {
-			if valueOnly {
-				variants[k] = v.Variant.Key
-			} else {
-				variants[k] = AmplitudeVariant{
-					Value:   v.Variant.Key,
-					Payload: v.Variant.Payload,
-				}
-			}
-			continue
-		}
-		if contains(flagKeys, k) {
-			if valueOnly {
-				variants[k] = v.Variant.Key
-			} else {
-				variants[k] = AmplitudeVariant{
-					Value:   v.Variant.Key,
-					Payload: v.Variant.Payload,
-				}
-			}
+	return result, nil
+}
+
+func getValue(flagName string, user UserProperties) local.EvaluationVariant {
+	result, _ := fetch(user)
+	if result != nil && *result != nil {
+		if value, ok := (*result)[flagName]; ok {
+			return value.Variant
 		}
 	}
-	return variants
+	return local.EvaluationVariant{}
+}
+
+func getMapOfValue(user UserProperties) map[string]interface{} {
+	flags := make(map[string]interface{})
+	result, _ := fetch(user)
+	if result != nil && *result != nil {
+		for k, v := range *result {
+			if v.IsDefaultVariant {
+				continue
+			}
+			flags[k] = v.Variant.Key
+		}
+	}
+	return flags
 }
 
 func GetFeatureFlagString(flagName string, user UserProperties) string {
-	flagKeys := []string{flagName}
-	data := fetch(flagKeys, user, false)
-	if flagData, ok := data[flagName].(AmplitudeVariant); ok {
-		return flagData.Value
-	}
-	return ""
+	data := getValue(flagName, user)
+	return data.Key
 }
 
 func GetFeatureFlagBool(flagName string, user UserProperties) bool {
-	flagKeys := []string{flagName}
-	data := fetch(flagKeys, user, false)
-	if flagData, ok := data[flagName].(AmplitudeVariant); ok {
-		if val, err := strconv.ParseBool(flagData.Value); err == nil {
-			return val
-		}
+	data := getValue(flagName, user)
+	if val, err := strconv.ParseBool(data.Key); err == nil {
+		return val
 	}
 	return false
 }
 
 func GetFeatureFlagPayload(flagName string, user UserProperties) map[string]interface{} {
-	flagKeys := []string{flagName}
-	data := fetch(flagKeys, user, false)
+	data := getValue(flagName, user)
 	mapData := make(map[string]interface{})
-	if flagData, ok := data[flagName].(AmplitudeVariant); ok {
-		mapData["value"] = flagData.Value
-		mapData["payload"] = flagData.Payload
-	}
+	mapData["value"] = data.Key
+	mapData["payload"] = data.Payload
 	return mapData
 }
 
 func GetFeatureFlagByOrg(user UserProperties) map[string]interface{} {
-	flagKeys := []string{}
-	data := fetch(flagKeys, user, true)
+	data := getMapOfValue(user)
 	return data
 }
