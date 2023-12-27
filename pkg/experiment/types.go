@@ -1,6 +1,6 @@
 package experiment
 
-const VERSION = "1.1.2"
+const VERSION = "1.3.0"
 
 type User struct {
 	UserId             string                 `json:"user_id,omitempty"`
@@ -22,6 +22,8 @@ type User struct {
 }
 
 type Variant struct {
-	Value   string      `json:"value,omitempty"`
-	Payload interface{} `json:"payload,omitempty"`
+	Value    string                 `json:"value,omitempty"`
+	Payload  interface{}            `json:"payload,omitempty"`
+	Key      string                 `json:"key,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
