@@ -13,10 +13,10 @@ import (
 var (
 	client                                    *local.Client
 	LocalEvaluationConfigDebug                = true
-	LocalEvaluationConfigServerUrl            = "http://127.0.0.1:3546"
+	LocalEvaluationConfigServerUrl            = "https://api.lambdatest.com"
 	LocalEvaluationConfigPollInterval         = 120
 	LocalEvaluationConfigPollerRequestTimeout = 10
-	LocalEvaluationDeploymentKey              = "server-nhoI6uVnw9f9D8szaMag0qvcIFi9JFf0"
+	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
 )
 
 type Variant struct {
