@@ -231,65 +231,6 @@ func (c *Client) doRules() (map[string]interface{}, error) {
 	return result, nil
 }
 
-// Deprecated: This function returns an old data model that is no longer used.
-func (c *Client) Flags() (*string, error) {
-	flags, err := c.doFlags()
-	if err != nil {
-		return nil, err
-	}
-	flagsJson, err := json.Marshal(flags)
-	if err != nil {
-		return nil, err
-	}
-	flagsString := string(flagsJson)
-	return &flagsString, nil
-}
-
-func (c *Client) doFlags() (map[string]interface{}, error) {
-	endpoint, err := url.Parse(c.config.ServerUrl)
-	if err != nil {
-		return nil, err
-	}
-	endpoint.Path = "sdk/v1/flags"
-	ctx, cancel := context.WithTimeout(context.Background(), c.config.FlagConfigPollerRequestTimeout)
-	defer cancel()
-	req, err := http.NewRequest("GET", endpoint.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	req.Header.Set("Authorization", fmt.Sprintf("Api-Key %s", c.apiKey))
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	req.Header.Set("X-Amp-Exp-Library", fmt.Sprintf("experiment-go-server/%v", experiment.VERSION))
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	c.log.Debug("flags: %v", string(body))
-	flagsArray := make([]interface{}, 0)
-	err = json.Unmarshal(body, &flagsArray)
-	if err != nil {
-		return nil, err
-	}
-	// Extract keys and create flags map
-	flags := make(map[string]interface{})
-	for _, flagAny := range flagsArray {
-		switch flag := flagAny.(type) {
-		case map[string]interface{}:
-			switch flagKey := flag["flagKey"].(type) {
-			case string:
-				flags[flagKey] = flag
-			}
-		}
-	}
-	return flags, nil
-}
-
 func contains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
