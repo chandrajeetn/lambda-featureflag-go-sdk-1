@@ -8,4 +8,9 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
-require golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+require (
+	github.com/amplitude/analytics-go v1.0.1 // indirect
+	github.com/google/uuid v1.3.0 // indirect
+	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
+)

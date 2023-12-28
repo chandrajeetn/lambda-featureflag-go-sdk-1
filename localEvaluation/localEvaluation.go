@@ -2,10 +2,6 @@ package localEvaluation
 
 import (
 	"fmt"
-	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/linuxArm64"
-	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/linuxX64"
-	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/macosArm64"
-	_ "github.com/LambdaTest/lambda-featureflag-go-sdk/internal/evaluation/lib/macosX64"
 	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment"
 	"github.com/LambdaTest/lambda-featureflag-go-sdk/pkg/experiment/local"
 	"github.com/joho/godotenv"
@@ -23,6 +19,13 @@ var (
 	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
 )
 
+type Variant struct {
+	Value    string                 `json:"value,omitempty"`
+	Payload  interface{}            `json:"payload,omitempty"`
+	Key      string                 `json:"key,omitempty"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
 type UserProperties struct {
 	OrgId            string `json:"org_id,omitempty"`
 	UserId           string `json:"user_id,omitempty"`
@@ -35,13 +38,6 @@ type UserProperties struct {
 	HubRegion        string `json:"hub_region,omitempty"`
 	InfraProvider    string `json:"infra_provider,omitempty"`
 	TemplateId       string `json:"template_id,omitempty"`
-}
-
-type AmplitudeConfig struct {
-	Debug                          bool
-	ServerUrl                      string
-	FlagConfigPollerInterval       time.Duration
-	FlagConfigPollerRequestTimeout time.Duration
 }
 
 func init() {
@@ -84,8 +80,8 @@ func Initialize() {
 	}
 }
 
-func InitializeWithConfig(conf AmplitudeConfig, deploymentKey string) {
-	client = local.Initialize(deploymentKey, (*local.Config)(&conf))
+func InitializeWithConfig(conf local.Config, deploymentKey string) {
+	client = local.Initialize(deploymentKey, &conf)
 	err := client.Start()
 	if err != nil {
 		err = fmt.Errorf("unable to create local evaluation client with given config %+v with error %s", conf, err.Error())
@@ -93,7 +89,7 @@ func InitializeWithConfig(conf AmplitudeConfig, deploymentKey string) {
 	}
 }
 
-func fetch(user UserProperties) (*local.EvaluationResult, error) {
+func fetch(user UserProperties) (map[string]experiment.Variant, error) {
 	userProp := map[string]interface{}{
 		"org_id":            user.OrgId,
 		"org_name":          user.OrgName,
@@ -110,32 +106,32 @@ func fetch(user UserProperties) (*local.EvaluationResult, error) {
 		UserProperties: userProp,
 	}
 
-	result, err := client.EvaluateByOrg(&expUser)
+	result, err := client.EvaluateV2(&expUser, []string{})
 	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func getValue(flagName string, user UserProperties) local.EvaluationVariant {
+func getValue(flagName string, user UserProperties) Variant {
 	result, _ := fetch(user)
-	if result != nil && *result != nil {
-		if value, ok := (*result)[flagName]; ok {
-			return value.Variant
+	if result != nil && len(result) != 0 {
+		if value, ok := result[flagName]; ok {
+			return Variant{
+				Key:   value.Key,
+				Value: value.Value,
+			}
 		}
 	}
-	return local.EvaluationVariant{}
+	return Variant{}
 }
 
 func getMapOfValue(user UserProperties) map[string]interface{} {
 	flags := make(map[string]interface{})
 	result, _ := fetch(user)
-	if result != nil && *result != nil {
-		for k, v := range *result {
-			if v.IsDefaultVariant {
-				continue
-			}
-			flags[k] = v.Variant.Key
+	if result != nil && len(result) != 0 {
+		for k, v := range result {
+			flags[k] = v.Value
 		}
 	}
 	return flags
