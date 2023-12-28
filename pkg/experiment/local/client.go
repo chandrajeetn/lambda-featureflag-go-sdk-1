@@ -253,7 +253,7 @@ func (c *Client) doFlags() (map[string]interface{}, error) {
 	endpoint.Path = "sdk/v1/flags"
 	ctx, cancel := context.WithTimeout(context.Background(), c.config.FlagConfigPollerRequestTimeout)
 	defer cancel()
-	req, err := http.NewRequest("GET", c.config.ServerUrl+path, nil)
+	req, err := http.NewRequest("GET", endpoint.String(), nil)
 	if err != nil {
 		return nil, err
 	}
