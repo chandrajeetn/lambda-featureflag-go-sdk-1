@@ -149,7 +149,7 @@ func (c *Client) FlagsV2() (string, error) {
 
 func (c *Client) doFlagsV2() (map[string]*evaluation.Flag, error) {
 	client := &http.Client{}
-	endpoint, err := url.Parse("https://api.lab.amplitude.com/")
+	endpoint, err := url.Parse(c.config.ServerUrl)
 	if err != nil {
 		return nil, err
 	}
