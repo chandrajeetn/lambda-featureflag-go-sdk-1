@@ -149,15 +149,14 @@ func (c *Client) FlagsV2() (string, error) {
 
 func (c *Client) doFlagsV2() (map[string]*evaluation.Flag, error) {
 	client := &http.Client{}
-	endpoint, err := url.Parse(c.config.ServerUrl)
-	if err != nil {
-		return nil, err
+	endpoint := c.config.ServerUrl
+	Path := "/sdk/v2/flags"
+	if endpoint != "" && endpoint[len(endpoint)-1] == '/' {
+		Path = "sdk/v2/flags"
 	}
-	endpoint.Path = "sdk/v2/flags"
-	endpoint.RawQuery = "v=0"
 	ctx, cancel := context.WithTimeout(context.Background(), c.config.FlagConfigPollerRequestTimeout)
 	defer cancel()
-	req, err := http.NewRequest("GET", endpoint.String(), nil)
+	req, err := http.NewRequest("GET", endpoint+Path, nil)
 	if err != nil {
 		return nil, err
 	}
