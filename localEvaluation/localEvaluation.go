@@ -118,8 +118,8 @@ func getValue(flagName string, user UserProperties) Variant {
 	if result != nil && len(result) != 0 {
 		if value, ok := result[flagName]; ok {
 			return Variant{
-				Key:   value.Key,
-				Value: value.Value,
+				Key:     value.Key,
+				Payload: value.Payload,
 			}
 		}
 	}
