@@ -13,7 +13,7 @@ import (
 var (
 	client                                    *local.Client
 	LocalEvaluationConfigDebug                = true
-	LocalEvaluationConfigServerUrl            = "https://apii.lambdatest.com"
+	LocalEvaluationConfigServerUrl            = "https://api.lambdatest.com"
 	LocalEvaluationConfigPollInterval         = 120
 	LocalEvaluationConfigPollerRequestTimeout = 60
 	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
