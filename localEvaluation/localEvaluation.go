@@ -13,10 +13,11 @@ import (
 var (
 	client                                    *local.Client
 	LocalEvaluationConfigDebug                = true
-	LocalEvaluationConfigServerUrl            = "https://api.lambdatest.com"
+	LocalEvaluationConfigServerUrl            = "https://apii.lambdatest.com"
 	LocalEvaluationConfigPollInterval         = 120
 	LocalEvaluationConfigPollerRequestTimeout = 60
 	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
+	retries                                   = 5
 )
 
 type Variant struct {
@@ -73,7 +74,16 @@ func Initialize() {
 		FlagConfigPollerRequestTimeout: time.Duration(LocalEvaluationConfigPollerRequestTimeout) * time.Second,
 	}
 	client = local.Initialize(LocalEvaluationDeploymentKey, &config)
-	err := client.Start()
+	var err error
+	for i := 0; i < retries; i++ {
+		err = client.Start()
+		if err != nil {
+			err = fmt.Errorf("unable to create local evaluation client with given config %+v attempt:%v with error %s", config, i+1, err.Error())
+			continue
+		} else {
+			break
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("unable to create local evaluation client with given config %+v with error %s", config, err.Error())
 		panic(err)
@@ -82,7 +92,16 @@ func Initialize() {
 
 func InitializeWithConfig(conf local.Config, deploymentKey string) {
 	client = local.Initialize(deploymentKey, &conf)
-	err := client.Start()
+	var err error
+	for i := 0; i < retries; i++ {
+		err = client.Start()
+		if err != nil {
+			err = fmt.Errorf("unable to create local evaluation client with given config %+v attempt:%v with error %s", conf, i+1, err.Error())
+			continue
+		} else {
+			break
+		}
+	}
 	if err != nil {
 		err = fmt.Errorf("unable to create local evaluation client with given config %+v with error %s", conf, err.Error())
 		panic(err)
