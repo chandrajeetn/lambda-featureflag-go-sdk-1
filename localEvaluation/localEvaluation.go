@@ -15,7 +15,7 @@ var (
 	LocalEvaluationConfigDebug                = true
 	LocalEvaluationConfigServerUrl            = "https://api.lambdatest.com"
 	LocalEvaluationConfigPollInterval         = 120
-	LocalEvaluationConfigPollerRequestTimeout = 10
+	LocalEvaluationConfigPollerRequestTimeout = 60
 	LocalEvaluationDeploymentKey              = "server-jAqqJaX3l8PgNiJpcv9j20ywPzANQQFh"
 )
 
